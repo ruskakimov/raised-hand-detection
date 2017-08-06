@@ -4,7 +4,7 @@
 *.jpg
 *.png
 *.sln
-*.vcproj
+*.vcxproj*
 /debug
 /results
 /x64
