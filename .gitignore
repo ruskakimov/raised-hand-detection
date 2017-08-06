@@ -1,0 +1,11 @@
+*.mp4
+*.avi
+*.MTS
+*.jpg
+*.png
+*.sln
+*.vcproj
+/debug
+/results
+/x64
+/.vs
