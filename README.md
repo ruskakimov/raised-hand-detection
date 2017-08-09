@@ -24,5 +24,9 @@ IDEA!! Palm tracking. When movement is clear (the whole hand in motion, big conn
 Palm area center can snap to the weight center inside of it.
 When hand is lowered, discard the palm and start again.
 
+
+# NEW PLAN
+We don't need palm position, neither hand position. Just find out if the hand has been raised or not.
+Figure that out by analysing the motion "disturbance" direction (imagine hand motion as a wave). If the direction is upwards then the hand is raised, if its downwards -- hand is lowered.
 ## Blob Benchmark notes
 Pay close attention to 129, 137, 156, 180
