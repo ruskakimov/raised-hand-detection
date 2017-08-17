@@ -3,8 +3,9 @@
 using namespace cv;
 using namespace std;
 
-#define MIN_BLOB_DISTANCE_SQUARED 100
+#define MIN_BLOB_DISTANCE_SQUARED 900
 #define MIN_BLOB_AREA 1000
+#define MIN_BLOB_WIDTH 50
 
 int Blob::squareDistanceTo(int x, int y) {
 	// clamp point to the side
@@ -15,6 +16,10 @@ int Blob::squareDistanceTo(int x, int y) {
 
 int Blob::area() {
 	return (maxx - minx) * (maxy - miny);
+}
+
+int Blob::width() {
+	return maxx - minx;
 }
 
 void Blob::insert(int x, int y) {
@@ -63,17 +68,19 @@ vector<Blob*> detectBlobs(Mat &src) {
 
 	vector<Blob*> bigBlobs;
 	for (Blob* b : allBlobs) {
-		if (b->area() > MIN_BLOB_AREA)
+		if (b->area() >= MIN_BLOB_AREA && b->width() >= MIN_BLOB_WIDTH)
 			bigBlobs.push_back(b);
 	}
 
 	Mat res;
+	// draw in red
 	cvtColor(src, res, COLOR_GRAY2BGR);
 	for (Blob *result : bigBlobs) {
 		Point p1(result->minx, result->miny);
 		Point p2(result->maxx, result->maxy);
 		rectangle(res, p1, p2, Scalar(0, 0, 255));
 	}
-	imshow("blobs", res);
+	//imshow("blobs", res);
+	src = res; // delete later
 	return bigBlobs;
 }

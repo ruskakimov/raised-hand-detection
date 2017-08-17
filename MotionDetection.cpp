@@ -18,7 +18,8 @@ Mat detectMotion(Mat &src, Mat &previousFrame) {
 		}
 	}
 	previousFrame = gray; // save current frame as a reference
-	erode(res, res, Mat(), Point(-1, -1), 3);
-	dilate(res, res, Mat(), Point(-1, -1), 1);
+	erode(res, res, Mat(), Point(-1, -1), 5);
+	dilate(res, res, Mat(), Point(-1, -1), 10);
+	erode(res, res, Mat(), Point(-1, -1), 5);
 	return res;
 }

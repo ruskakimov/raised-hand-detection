@@ -15,6 +15,9 @@ Detect when hand is rising. (Significant blob above head level).
 Small blobs inside big ones.
 Palm is frequently not selected. Especially at the end of the movement, when motion is minimal.
 
+## Blob Benchmark notes
+Pay close attention to 129, 137, 156, 180
+
 ## Hand detection ideas
 Setup blob detection, so the palm is always present in a blob.
 Use higher vertical min_distance than horizontal.
@@ -28,5 +31,3 @@ When hand is lowered, discard the palm and start again.
 # NEW PLAN
 We don't need palm position, neither hand position. Just find out if the hand has been raised or not.
 Figure that out by analysing the motion "disturbance" direction (imagine hand motion as a wave). If the direction is upwards then the hand is raised, if its downwards -- hand is lowered.
-## Blob Benchmark notes
-Pay close attention to 129, 137, 156, 180

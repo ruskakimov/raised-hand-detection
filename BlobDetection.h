@@ -9,6 +9,7 @@ struct Blob {
 	int maxy;
 	Blob(int x, int y) : minx(x), maxx(x), miny(y), maxy(y) {}
 	int squareDistanceTo(int x, int y);
+	int width();
 	int area();
 	void insert(int x, int y);
 	void merge(Blob *b);

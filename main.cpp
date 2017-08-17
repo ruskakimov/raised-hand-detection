@@ -4,50 +4,96 @@
 #include <iostream>
 
 #include "MotionDetection.h"
-#include "BlobDetection.h"
-#include "Plank.h"
 
-#define PLANK_ACTIVE_DISTANCE 150
+#define QUEUE_LEN 5
 
 using namespace cv;
 using namespace std;
 
-void updatePlank(vector<Blob*> blobs, Plank *plank) {
-	int min_y = plank->y - plank->activeDistance;
-	int max_y = plank->y + plank->activeDistance;
-	int new_y = INT_MAX;
-	for (Blob *b : blobs) {
-		if (b->miny < max_y && b->maxy > min_y) { // blob intersects active area 
-			new_y = min(new_y, max(b->miny, min_y));
+int findTop(Mat& bin) {
+	for (int r = 0; r < bin.rows; r++) {
+		for (int c = 0; c < bin.cols; c++) {
+			if (bin.at<uchar>(r, c))
+				return r;
 		}
 	}
-	// blob top could be out of reach
-	if (new_y != INT_MAX)
-		plank->y = new_y;
+	return -1;
 }
 
+Mat plot(deque<int> dq, int height) {
+	int step = 20;
+	Mat plot = Mat::zeros(height, step * (dq.size() + 2), CV_8UC3);
+	for (int i = 0; i < dq.size(); i++) {
+		circle(plot, Point(step + i * step, dq[i]), 5, Scalar(0, 0, 255), -1);
+	}
+	return plot;
+}
+
+double standardDeviation(vector<int> distances) {
+	// calc mean
+	double mean = 0;
+	for (int d : distances)
+		mean += d;
+	mean /= distances.size();
+
+	// calc variance
+	double variance = 0;
+	for (int d : distances)
+		variance += pow(mean - d, 2);
+	variance /= distances.size();
+
+	// calc standard deviation
+	double std = sqrt(variance);
+	return std;
+}
+
+bool descending(deque<int> dq) {
+	// y coordinates ascend
+	int len = dq.size();
+	vector<int> distances(len - 1);
+	for (int i = 1; i < len; i++) {
+		distances[i - 1] = abs(dq[i] - dq[i - 1]);
+		if (dq[i] <= dq[i - 1])
+			return false;
+	}
+	//int std = standardDeviation(distances);
+	//cout << "down: " << std << endl;
+	//return std < 20;
+	return true;
+}
+
+bool ascending(deque<int> dq) {
+	// y coordinates descend
+	int len = dq.size();
+	vector<int> distances(len - 1);
+	for (int i = 1; i < len; i++) {
+		distances[i - 1] = abs(dq[i] - dq[i - 1]);
+		if (dq[i] >= dq[i - 1])
+			return false;
+	}
+	//int std = standardDeviation(distances);
+	//cout << "up: " << std << endl;
+	//return std < 20;
+	return true;
+}
+
+
 int main() {
-	VideoCapture cam(0);
+	VideoCapture cam("three.mts");
 
-	Mat sampleImg;
-	cam >> sampleImg;
-
-	VideoWriter res("result.avi", VideoWriter::fourcc('M', 'J', 'P', 'G'), 25, sampleImg.size());
+	VideoWriter res;
 
 	if (!cam.isOpened())
 		return -1;
 
-	//namedWindow("cam");
-	//namedWindow("skin");
-	namedWindow("motion");
-	//namedWindow("overlap");
+	namedWindow("cam", WINDOW_FREERATIO);
+	namedWindow("result", WINDOW_FREERATIO);
 
 	Mat previousFrame; // previous frame
 	cam >> previousFrame;
 	cvtColor(previousFrame, previousFrame, CV_BGR2GRAY);
 
-	//Blob* oldBlob = new Blob(0, 0); // previous frame blob
-	Plank *plank = new Plank(previousFrame.rows - 1, 0, previousFrame.cols - 1, PLANK_ACTIVE_DISTANCE);
+	deque<int> peaks(QUEUE_LEN, -1);
 
 	while (true) {
 		Mat img;
@@ -55,30 +101,36 @@ int main() {
 		if (img.empty())
 			break;
 
-		//imshow("cam", img);
+		imshow("cam", img);
 
-		//Mat skin;
-		//IplImage* image2 = cvCloneImage(&(IplImage)img);
-		//detectSkin(skin, image2);
-
-		//Mat skin = detectSkin(img);
 		Mat motion = detectMotion(img, previousFrame);
 
-		//imshow("skin", skin);
 
-		vector<Blob*> blobs = detectBlobs(motion);
-		updatePlank(blobs, plank);
-
-		//Mat both = overlap(skin, motion);
-		//imshow("overlap", both);
+		//if (ascending(peaks)) {
+		//	handUp = true;
+		//}
+		//else if (descending(peaks)) {
+		//	handUp = false;
+		//}
 
 		Mat result;
 		cvtColor(motion, result, COLOR_GRAY2BGR);
 
-		plank->drawOn(result, Scalar(0,255,0));
+		//Mat last5_plot = plot(last, result.rows);
+		//Scalar dotColor = Scalar(0, 0, 255);
+		//if (handUp) {
+		//	dotColor = Scalar(0, 255, 0);
+		//}
+		//circle(result, Point(100, 100), 50, dotColor, -1);
 
-		imshow("motion", result);
-		res << result;
+		//hconcat(result, last5_plot, result);
+		imshow("result", result);
+
+		if (res.isOpened())
+			res << result;
+		else
+			res = *new VideoWriter("result.avi", VideoWriter::fourcc('M', 'J', 'P', 'G'), 25, result.size());
+
 
 		int keyCode = waitKey(5);
 		if (keyCode == 27)
