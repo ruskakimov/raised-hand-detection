@@ -1,6 +1,6 @@
-*.mp4
-*.avi
-*.MTS
+*.mp4*
+*.avi*
+*.MTS*
 *.jpg
 *.png
 *.sln
