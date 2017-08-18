@@ -6,8 +6,8 @@ void PersonArea::drawOn(Mat &img)
 {
 	Scalar color(0, 0, 255);
 	if (handUp) color = Scalar(0, 255, 0);
-	Point pt1(min_x, min_y);
-	Point pt2(max_x, max_y);
+	Point pt1(area.x, area.y);
+	Point pt2(area.x + area.width, area.y + area.height);
 	rectangle(img, pt1, pt2, color, 5);
 }
 
@@ -29,8 +29,8 @@ void PersonArea::updatePeaks(Mat &bin)
 
 int PersonArea::findTop(Mat &bin)
 {
-	for (int r = min_y; r < max_y; r++) {
-		for (int c = min_x; c < max_x; c++) {
+	for (int r = area.y; r < area.y + area.height; r++) {
+		for (int c = area.x; c < area.x + area.width; c++) {
 			if (bin.at<uchar>(r, c)) return r;
 		}
 	}

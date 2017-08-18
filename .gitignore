@@ -5,6 +5,7 @@
 *.png
 *.sln
 *.vcxproj*
+*.vix
 /debug
 /results
 /x64

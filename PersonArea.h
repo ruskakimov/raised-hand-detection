@@ -4,18 +4,21 @@
 
 class PersonArea {
 public:
-	PersonArea(int minx, int miny, int maxx, int maxy, int peaksNum) :
-		min_x(minx), min_y(miny), max_x(maxx), max_y(maxy), peaks(peaksNum, -1), handUp(false)
+	PersonArea(cv::Rect face, int peaksNum) :
+		peaks(peaksNum, -1), handUp(false)
 	{
+		area = face;
+		// expand to 3x3
+		area.x -= area.width;
+		area.y -= area.height;
+		area.width *= 3;
+		area.height *= 3;
 	}
 	void update(cv::Mat &bin);
 	void drawOn(cv::Mat &img);
 
 private:
-	int min_x;
-	int min_y;
-	int max_x;
-	int max_y;
+	cv::Rect area;
 	std::deque<int> peaks;
 	bool handUp;
 
