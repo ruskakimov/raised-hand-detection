@@ -2,6 +2,8 @@
 
 using namespace cv;
 
+int PersonArea::minDist = 30;
+
 void PersonArea::drawOn(Mat &img)
 {
 	Scalar color(0, 0, 255);
@@ -9,6 +11,17 @@ void PersonArea::drawOn(Mat &img)
 	Point pt1(area.x, area.y);
 	Point pt2(area.x + area.width, area.y + area.height);
 	rectangle(img, pt1, pt2, color, 5);
+}
+
+void PersonArea::drawGraphOn(Mat &img)
+{
+	Scalar color(0, 0, 255);
+	int steps = peaks.size() + 1;
+	int step = area.width / steps;
+	for (int i = 1; i < steps; i++) {
+		if (peaks[i - 1] > 0)
+			circle(img, Point(area.x + i * step, peaks[i - 1]), 5, color, -1);
+	}
 }
 
 
@@ -40,8 +53,23 @@ int PersonArea::findTop(Mat &bin)
 
 void PersonArea::updateHand()
 {
-	if (handUp && descending()) handUp = false;
-	else if (!handUp && ascending()) handUp = true;
+	if (handUp && descending() && low() && farApart()) handUp = false;
+	else if (!handUp && ascending() && high() && farApart()) handUp = true;
+}
+
+bool PersonArea::farApart()
+{
+	return abs(peaks.front() - peaks.back()) > minDist;
+}
+
+bool PersonArea::high()
+{
+	return peaks.back() < (area.y + area.height / 2);
+}
+
+bool PersonArea::low()
+{
+	return peaks.back() > (area.y + area.height / 2);
 }
 
 bool PersonArea::ascending()

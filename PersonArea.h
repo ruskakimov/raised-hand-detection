@@ -4,7 +4,8 @@
 
 class PersonArea {
 public:
-	PersonArea(cv::Rect face, int peaksNum) :
+	static int minDist;
+	PersonArea(cv::Rect face, int peaksNum, cv::Size size) :
 		peaks(peaksNum, -1), handUp(false)
 	{
 		area = face;
@@ -13,9 +14,24 @@ public:
 		area.y -= area.height;
 		area.width *= 3;
 		area.height *= 3;
+		if (area.x < 0) {
+			area.width += area.x;
+			area.x = 0;
+		}
+		if (area.y < 0) {
+			area.width += area.y;
+			area.y = 0;
+		}
+		if (area.x + area.width > size.width) {
+			area.width = size.width - area.x;
+		}
+		if (area.y + area.height > size.height) {
+			area.height = size.height - area.y;
+		}
 	}
 	void update(cv::Mat &bin);
 	void drawOn(cv::Mat &img);
+	void drawGraphOn(cv::Mat &img);
 
 private:
 	cv::Rect area;
@@ -27,4 +43,7 @@ private:
 	void updateHand();
 	bool ascending();
 	bool descending();
+	bool high();
+	bool low();
+	bool farApart();
 };

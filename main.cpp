@@ -12,17 +12,8 @@
 using namespace cv;
 using namespace std;
 
-Mat plot(deque<int> dq, int height) {
-	int step = 20;
-	Mat plot = Mat::zeros(height, step * (dq.size() + 2), CV_8UC3);
-	for (int i = 0; i < dq.size(); i++) {
-		circle(plot, Point(step + i * step, dq[i]), 5, Scalar(0, 0, 255), -1);
-	}
-	return plot;
-}
-
 int main() {
-	VideoCapture cam("two.mp4");
+	VideoCapture cam(0);
 	VideoWriter res;
 	if (!cam.isOpened())
 		return -1;
@@ -33,9 +24,14 @@ int main() {
 	cvtColor(previousFrame, previousFrame, CV_BGR2GRAY);
 
 	vector<Rect> faces = detectFaces(previousFrame);
+	if (faces.empty()) {
+		cout << "No faces found!" << endl;
+		return -1;
+	}
 	vector<PersonArea*> person_areas;
 	for (Rect face : faces) {
-		person_areas.push_back(new PersonArea(face, QUEUE_LEN));
+		cout << face.x << ' ' << face.y << endl;
+		person_areas.push_back(new PersonArea(face, QUEUE_LEN, previousFrame.size()));
 	}
 
 	while (true) {
@@ -55,6 +51,7 @@ int main() {
 
 		for (auto pa : person_areas) {
 			pa->drawOn(img);
+			pa->drawGraphOn(img);
 		}
 
 		if (res.isOpened())
