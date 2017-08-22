@@ -71,7 +71,7 @@ bool PersonArea::high()
 
 bool PersonArea::low()
 {
-	return peaks.back() > (area.y + area.height * 2 / 3) && peaks.back() != -1;
+	return peaks.back() > (area.y + area.height / 2) && peaks.back() != -1;
 }
 
 bool PersonArea::ascending()
