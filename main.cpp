@@ -13,7 +13,7 @@ using namespace cv;
 using namespace std;
 
 int main() {
-	VideoCapture cam("five.mp4");
+	VideoCapture cam("two.mp4");
 	VideoWriter res;
 	if (!cam.isOpened())
 		return -1;
@@ -29,14 +29,26 @@ int main() {
 		return -1;
 	}
 	vector<PersonArea*> person_areas;
+	int face_width_sum = 0;
 	for (Rect face : faces) {
+		face_width_sum += face.width;
 		person_areas.push_back(new PersonArea(face, QUEUE_LEN, previousFrame.size()));
 	}
+	// set min gap between areas as average face width
+	int average_face_width = face_width_sum / faces.size();
+	cout << "face w: " << average_face_width << endl;
+	PersonArea::minGap = average_face_width;
 
 	// remove overlaps
 	for (int i = 0; i < person_areas.size(); i++) {
 		for (int j = i + 1; j < person_areas.size(); j++) {
 			person_areas[i]->removeOverlap(person_areas[j]);
+		}
+	}
+	// increase gap
+	for (int i = 0; i < person_areas.size(); i++) {
+		for (int j = 0; j < person_areas.size(); j++) {
+			if (i != j) person_areas[i]->increaseGap(person_areas[j]);
 		}
 	}
 

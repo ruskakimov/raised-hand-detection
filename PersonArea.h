@@ -4,7 +4,8 @@
 
 class PersonArea {
 public:
-	static int minDist;
+	static int minWaveLength;
+	static int minGap;
 	PersonArea(cv::Rect face, int peaksNum, cv::Size size) :
 		peaks(peaksNum, -1), handUp(false)
 	{
@@ -33,8 +34,13 @@ public:
 	void drawOn(cv::Mat &img);
 	void drawGraphOn(cv::Mat &img);
 	void removeOverlap(PersonArea* other);
-	void removeOverlap(cv::Rect &overlap);
-	cv::Rect getOverlap(cv::Rect &rect);
+	void increaseGap(PersonArea* other);
+	cv::Rect getArea()
+	{
+		return area;
+	}
+	// move to private
+	int gapBetween(PersonArea* other);
 
 private:
 	cv::Rect area;
@@ -49,4 +55,7 @@ private:
 	bool high();
 	bool low();
 	bool farApart();
+	void removeOverlap(cv::Rect &overlap);
+	cv::Rect getOverlap(cv::Rect &rect);
+	int gapBetween(cv::Rect &rect);
 };

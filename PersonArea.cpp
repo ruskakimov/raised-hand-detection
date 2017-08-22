@@ -4,7 +4,8 @@
 using namespace cv;
 using namespace std;
 
-int PersonArea::minDist = 30;
+int PersonArea::minWaveLength = 30;
+int PersonArea::minGap = 30;
 
 void PersonArea::drawOn(Mat &img)
 {
@@ -61,7 +62,7 @@ void PersonArea::updateHand()
 
 bool PersonArea::farApart()
 {
-	return abs(peaks.front() - peaks.back()) > minDist;
+	return abs(peaks.front() - peaks.back()) > minWaveLength;
 }
 
 bool PersonArea::high()
@@ -141,4 +142,37 @@ void PersonArea::removeOverlap(Rect &overlap)
 			area.y += overlap.height;
 		}
 	}
+}
+
+void PersonArea::increaseGap(PersonArea* other)
+{
+	int remove = minGap - gapBetween(other);
+	if (remove < 0) return;
+	Rect otherArea = other->getArea();
+	if (area.x < otherArea.x)
+	{
+		// remove from area
+		area.width -= remove;
+	}
+	else
+	{
+		// remove from other area
+		otherArea.width -= remove;
+		otherArea.x += remove;
+	}
+}
+
+
+int PersonArea::gapBetween(PersonArea* other)
+{
+	return other->gapBetween(area);
+}
+
+int PersonArea::gapBetween(Rect &rect)
+{
+	int maxx0 = area.x + area.width;
+	int minx0 = area.x;
+	int maxx1 = rect.x + rect.width;
+	int minx1 = rect.x;
+	return max(minx0, minx1) - min(maxx0, maxx1);
 }
