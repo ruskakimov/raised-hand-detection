@@ -32,6 +32,9 @@ public:
 	void update(cv::Mat &bin);
 	void drawOn(cv::Mat &img);
 	void drawGraphOn(cv::Mat &img);
+	void removeOverlap(PersonArea* other);
+	void removeOverlap(cv::Rect &overlap);
+	cv::Rect getOverlap(cv::Rect &rect);
 
 private:
 	cv::Rect area;

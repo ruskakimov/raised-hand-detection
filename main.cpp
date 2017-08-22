@@ -7,13 +7,13 @@
 #include "FaceDetection.h"
 #include "PersonArea.h"
 
-#define QUEUE_LEN 7
+#define QUEUE_LEN 5
 
 using namespace cv;
 using namespace std;
 
 int main() {
-	VideoCapture cam(0);
+	VideoCapture cam("five.mp4");
 	VideoWriter res;
 	if (!cam.isOpened())
 		return -1;
@@ -30,8 +30,14 @@ int main() {
 	}
 	vector<PersonArea*> person_areas;
 	for (Rect face : faces) {
-		cout << face.x << ' ' << face.y << endl;
 		person_areas.push_back(new PersonArea(face, QUEUE_LEN, previousFrame.size()));
+	}
+
+	// remove overlaps
+	for (int i = 0; i < person_areas.size(); i++) {
+		for (int j = i + 1; j < person_areas.size(); j++) {
+			person_areas[i]->removeOverlap(person_areas[j]);
+		}
 	}
 
 	while (true) {

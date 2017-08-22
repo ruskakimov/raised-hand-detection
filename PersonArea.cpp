@@ -1,6 +1,8 @@
 #include "PersonArea.h"
+#include <iostream>
 
 using namespace cv;
+using namespace std;
 
 int PersonArea::minDist = 30;
 
@@ -64,12 +66,12 @@ bool PersonArea::farApart()
 
 bool PersonArea::high()
 {
-	return peaks.back() < (area.y + area.height / 2);
+	return peaks.back() < (area.y + area.height / 3) && peaks.back() != -1;
 }
 
 bool PersonArea::low()
 {
-	return peaks.back() > (area.y + area.height / 2);
+	return peaks.back() > (area.y + area.height * 2 / 3) && peaks.back() != -1;
 }
 
 bool PersonArea::ascending()
@@ -88,4 +90,55 @@ bool PersonArea::descending()
 		if (peaks[i] <= peaks[i - 1]) return false;
 	}
 	return true;
+}
+
+Rect PersonArea::getOverlap(Rect &rect)
+{
+	Point p1(
+		max(area.x, rect.x),
+		max(area.y, rect.y)
+	);
+	Point p2(
+		min(area.x + area.width, rect.x + rect.width),
+		min(area.y + area.height, rect.y + rect.height)
+	);
+	if (p1.x >= p2.x || p1.y >= p2.y) {
+		return Rect(Point(0, 0), Point(0, 0));
+	}
+	Rect overlap(p1, p2);
+	return overlap;
+}
+
+void PersonArea::removeOverlap(PersonArea* other)
+{
+	Rect overlap = other->getOverlap(area);
+	if (overlap.area() > 0)
+	{
+		removeOverlap(overlap);
+		other->removeOverlap(overlap);
+	}
+}
+
+void PersonArea::removeOverlap(Rect &overlap)
+{
+	if (overlap.height >= overlap.width)
+	{
+		// remove vertical slice
+		area.width -= overlap.width;
+
+		if (overlap.x == area.x) // overlap on left side
+		{
+			area.x += overlap.width;
+		}
+	}
+	else
+	{
+		// remove horizontal slice
+		area.height -= overlap.height;
+
+		if (overlap.y == area.y) // overlap on top
+		{
+			area.y += overlap.height;
+		}
+	}
 }
