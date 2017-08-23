@@ -14,27 +14,46 @@ using namespace cv;
 using namespace std;
 
 void updatePaQueue(deque<PersonArea*> &raised_queue, unordered_set<PersonArea*> &have_raised, PersonArea* &pa);
-vector<PersonArea*> preparePas(vector<Rect> &faces, Size &size);
+vector<PersonArea*> preparePas(vector<string> &names, vector<Rect> &faces, Size &size);
 void updatePasPositions(vector<PersonArea*> &person_areas, deque<PersonArea*> &raised_queue, unordered_set<PersonArea*> &have_raised);
 void displayTotalCount(Mat &img, int count);
+Mat generateQueueDisplay(deque<PersonArea*> &person_areas, Size &size);
+void sortAreas(vector<Rect> &areas);
 
 int main() {
-	VideoCapture cam("two.mp4");
+	string video = "two.mp4";
+
+	vector<string> names;
+	if (video == "two.mp4")
+	{
+		names = vector<string>{ "Abdullah", "Nelson" };
+	}
+	else if (video == "three.mp4")
+	{
+		names = vector<string>{ "Henry", "?", "Boice?" };
+	}
+	else if (video == "five.mp4")
+	{
+		names = vector<string>{ "Abdullah", "Logan", "?", "Angel", "??" };
+	}
+
+	VideoCapture cam(video);
 	VideoWriter res;
 	if (!cam.isOpened())
 		return -1;
-	namedWindow("result", WINDOW_FREERATIO);
+	namedWindow("result", WINDOW_AUTOSIZE);
 
 	Mat previousFrame; // previous frame for motion detection
 	cam >> previousFrame;
 	cvtColor(previousFrame, previousFrame, CV_BGR2GRAY);
 
 	vector<Rect> faces = detectFaces(previousFrame);
+	sortAreas(faces);
 	if (faces.empty()) {
 		cout << "No faces found!" << endl;
 		return -1;
 	}
-	vector<PersonArea*> person_areas = preparePas(faces, previousFrame.size());
+	vector<PersonArea*> person_areas = preparePas(names, faces, previousFrame.size());
 
 	// queue of raised hands
 	unordered_set<PersonArea*> have_raised;
@@ -54,8 +73,8 @@ int main() {
 		}
 		updatePasPositions(person_areas, raised_queue, have_raised);
 
-		Mat result;
-		cvtColor(motion, result, COLOR_GRAY2BGR);
+		Mat queueDisplay = generateQueueDisplay(raised_queue, img.size());
+		hconcat(img, queueDisplay, img);
 
 		for (auto pa : person_areas) {
 			pa->drawOn(img);
@@ -66,7 +85,7 @@ int main() {
 		if (res.isOpened())
 			res << img;
 		else
-			res = *new VideoWriter("result.avi", VideoWriter::fourcc('M', 'J', 'P', 'G'), 50, result.size());
+			res = *new VideoWriter("result.avi", VideoWriter::fourcc('M', 'J', 'P', 'G'), 50, img.size());
 		imshow("result", img);
 		int keyCode = waitKey(5);
 		if (keyCode == 27)
@@ -130,13 +149,15 @@ void updatePaQueue(deque<PersonArea*> &raised_queue, unordered_set<PersonArea*> 
 }
 
 
-vector<PersonArea*> preparePas(vector<Rect> &faces, Size &size)
+vector<PersonArea*> preparePas(vector<string> &names, vector<Rect> &faces, Size &size)
 {
 	vector<PersonArea*> person_areas;
 	int face_width_sum = 0;
+	int i = 0;
 	for (Rect face : faces) {
 		face_width_sum += face.width;
-		person_areas.push_back(new PersonArea(face, QUEUE_LEN, size));
+		person_areas.push_back(new PersonArea(names[i], face, QUEUE_LEN, size));
+		i++;
 	}
 	// set min gap between areas as average face width
 	int average_face_width = face_width_sum / faces.size();
@@ -156,4 +177,38 @@ vector<PersonArea*> preparePas(vector<Rect> &faces, Size &size)
 		}
 	}
 	return person_areas;
+}
+
+
+Mat generateQueueDisplay(deque<PersonArea*> &person_areas, Size &size)
+{
+	Mat display = Mat::zeros(Size(300, size.height), CV_8UC3);
+
+	Scalar white(255, 255, 255);
+	Scalar green(0, 255, 0);
+
+	Point text_start(30, 100);
+	putText(display, "Queue:", text_start, FONT_HERSHEY_PLAIN, 4, white, 2);
+	text_start.y += 30;
+
+	for (int i = 0; i < person_areas.size(); i++)
+	{
+		text_start.y += 35;
+		Scalar color = white;
+		if (i == 0) color = green;
+		string name = person_areas[i]->getName();
+		string txt = to_string(i + 1) + ". " + name;
+		putText(display, txt, text_start, FONT_HERSHEY_PLAIN, 2, color, 2);
+	}
+
+	return display;
+}
+
+bool compareFn(Rect &l, Rect &r) {
+	return l.x < r.x;
+}
+
+void sortAreas(vector<Rect> &areas)
+{
+	sort(areas.begin(), areas.end(), compareFn);
 }

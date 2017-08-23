@@ -1,13 +1,14 @@
 #pragma once
 #include <opencv2\opencv.hpp>
 #include <deque>
+#include <string>
 
 class PersonArea {
 public:
 	static int minWaveLength;
 	static int minGap;
-	PersonArea(cv::Rect face, int peaksNum, cv::Size size) :
-		peaks(peaksNum, -1), handUp(false), pos(-1), animationFrame(0)
+	PersonArea(std::string personName, cv::Rect face, int peaksNum, cv::Size size) :
+		personName(personName), peaks(peaksNum, -1), handUp(false), pos(-1), animationFrame(0)
 	{
 		area = face;
 		// expand to 3x3
@@ -40,12 +41,17 @@ public:
 	{
 		return area;
 	}
+	std::string getName()
+	{
+		return personName;
+	}
 	void setPos(int new_pos)
 	{
 		pos = new_pos;
 	};
 
 private:
+	std::string personName;
 	cv::Rect area;
 	std::deque<int> peaks;
 	bool handUp;

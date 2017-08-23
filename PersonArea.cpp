@@ -19,15 +19,21 @@ void PersonArea::drawOn(Mat &img)
 	Point pt1(area.x, area.y);
 	Point pt2(area.x + area.width, area.y + area.height);
 
-
 	int border = 3;
+	// border animation for the first in the queue
 	if (pos == 1) {
+		color = Scalar(0, 255, 0);
+
+		// draw name
+		Point name_start(area.x, area.y - 20);
+		putText(img, personName, name_start, FONT_HERSHEY_PLAIN, 4, Scalar(0, 0, 0), 5);
+		putText(img, personName, name_start, FONT_HERSHEY_PLAIN, 4, color, 2);
+
 		int increase = 2 * (animationFrame / 5);
 		if (increase > 10) increase = 20 - increase;
 		border = 3 + increase;
 		animationFrame++;
 		animationFrame %= 50;
-		color = Scalar(0, 255, 0);
 	}
 	rectangle(img, pt1, pt2, color, border);
 
