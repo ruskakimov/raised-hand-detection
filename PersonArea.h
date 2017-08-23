@@ -7,7 +7,7 @@ public:
 	static int minWaveLength;
 	static int minGap;
 	PersonArea(cv::Rect face, int peaksNum, cv::Size size) :
-		peaks(peaksNum, -1), handUp(false)
+		peaks(peaksNum, -1), handUp(false), pos(-1), animationFrame(0)
 	{
 		area = face;
 		// expand to 3x3
@@ -30,6 +30,7 @@ public:
 			area.height = size.height - area.y;
 		}
 	}
+	bool isRaised();
 	void update(cv::Mat &bin);
 	void drawOn(cv::Mat &img);
 	void drawGraphOn(cv::Mat &img);
@@ -39,13 +40,17 @@ public:
 	{
 		return area;
 	}
-	// move to private
-	int gapBetween(PersonArea* other);
+	void setPos(int new_pos)
+	{
+		pos = new_pos;
+	};
 
 private:
 	cv::Rect area;
 	std::deque<int> peaks;
 	bool handUp;
+	int pos;
+	int animationFrame;
 
 	void updatePeaks(cv::Mat &bin);
 	int findTop(cv::Mat &bin);
@@ -57,5 +62,6 @@ private:
 	bool farApart();
 	void removeOverlap(cv::Rect &overlap);
 	cv::Rect getOverlap(cv::Rect &rect);
+	int gapBetween(PersonArea* other);
 	int gapBetween(cv::Rect &rect);
 };

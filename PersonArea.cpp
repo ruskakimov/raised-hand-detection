@@ -7,13 +7,36 @@ using namespace std;
 int PersonArea::minWaveLength = 30;
 int PersonArea::minGap = 30;
 
+bool PersonArea::isRaised()
+{
+	return handUp;
+}
+
 void PersonArea::drawOn(Mat &img)
 {
 	Scalar color(0, 0, 255);
-	if (handUp) color = Scalar(0, 255, 0);
+	if (handUp) color = Scalar(0, 255, 255);
 	Point pt1(area.x, area.y);
 	Point pt2(area.x + area.width, area.y + area.height);
-	rectangle(img, pt1, pt2, color, 5);
+
+
+	int border = 3;
+	if (pos == 1) {
+		int increase = 2 * (animationFrame / 5);
+		if (increase > 10) increase = 20 - increase;
+		border = 3 + increase;
+		animationFrame++;
+		animationFrame %= 50;
+		color = Scalar(0, 255, 0);
+	}
+	rectangle(img, pt1, pt2, color, border);
+
+	if (pos > 0)
+	{
+		Point text_start(area.x + 10, area.y + 60);
+		putText(img, to_string(pos), text_start, FONT_HERSHEY_PLAIN, 4, Scalar(0, 0, 0), 5);
+		putText(img, to_string(pos), text_start, FONT_HERSHEY_PLAIN, 4, color, 2);
+	}
 }
 
 void PersonArea::drawGraphOn(Mat &img)
@@ -56,7 +79,11 @@ int PersonArea::findTop(Mat &bin)
 
 void PersonArea::updateHand()
 {
-	if (handUp && descending() && low() && farApart()) handUp = false;
+	if (handUp && descending() && low() && farApart())
+	{
+		handUp = false;
+		animationFrame = 0;
+	}
 	else if (!handUp && ascending() && high() && farApart()) handUp = true;
 }
 
