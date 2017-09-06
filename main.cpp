@@ -7,6 +7,7 @@
 #include "MotionDetection.h"
 #include "FaceDetection.h"
 #include "PersonArea.h"
+#include "SkinDetection.h"
 
 #define QUEUE_LEN 5
 
@@ -19,9 +20,10 @@ void updatePasPositions(vector<PersonArea*> &person_areas, deque<PersonArea*> &r
 void displayTotalCount(Mat &img, int count);
 Mat generateQueueDisplay(deque<PersonArea*> &person_areas, Size &size);
 void sortAreas(vector<Rect> &areas);
+Mat rgbOverlap(Mat &motion, Mat &skin);
 
 int main() {
-	string video = "two.mp4";
+	string video = "three.mp4";
 
 	vector<string> names;
 	if (video == "two.mp4")
@@ -30,15 +32,16 @@ int main() {
 	}
 	else if (video == "three.mp4")
 	{
-		names = vector<string>{ "Henry", "?", "Boice?" };
+		names = vector<string>{ "Henry", "Ching", "Lee" };
 	}
 	else if (video == "five.mp4")
 	{
-		names = vector<string>{ "Abdullah", "Logan", "?", "Angel", "??" };
+		names = vector<string>{ "Abdullah", "Logan", "Umar", "Angel", "Rickveen" };
 	}
 
 	VideoCapture cam(video);
 	VideoWriter res;
+	VideoWriter res2;
 	if (!cam.isOpened())
 		return -1;
 	namedWindow("result", WINDOW_AUTOSIZE);
@@ -75,18 +78,31 @@ int main() {
 
 		Mat queueDisplay = generateQueueDisplay(raised_queue, img.size());
 		hconcat(img, queueDisplay, img);
+		cvtColor(motion, motion, COLOR_GRAY2BGR);
 
 		for (auto pa : person_areas) {
 			pa->drawOn(img);
-			//pa->drawGraphOn(img);
+			pa->drawOn(motion);
+			pa->drawGraphOn(motion);
 		}
 		displayTotalCount(img, raised_queue.size());
 
-		if (res.isOpened())
+		if (res.isOpened()) {
 			res << img;
-		else
+		}
+		else {
 			res = *new VideoWriter("result.avi", VideoWriter::fourcc('M', 'J', 'P', 'G'), 50, img.size());
+		}
+
+		if (res2.isOpened()) {
+			res2 << motion;
+		}
+		else {
+			res2 = *new VideoWriter("motion_result.avi", VideoWriter::fourcc('M', 'J', 'P', 'G'), 50, motion.size());
+		}
+
 		imshow("result", img);
+		imshow("motion result", motion);
 		int keyCode = waitKey(5);
 		if (keyCode == 27)
 			break;
@@ -211,4 +227,18 @@ bool compareFn(Rect &l, Rect &r) {
 void sortAreas(vector<Rect> &areas)
 {
 	sort(areas.begin(), areas.end(), compareFn);
+}
+
+Mat rgbOverlap(Mat &motion, Mat &skin)
+{
+	Mat rgb(motion.size(), CV_8UC3, Scalar(0, 0, 0));
+	for (int r = 0; r < rgb.rows; r++)
+	{
+		for (int c = 0; c < rgb.cols; c++)
+		{
+			rgb.at<Vec3b>(r, c)[0] = motion.at<uchar>(r, c);
+			rgb.at<Vec3b>(r, c)[2] = skin.at<uchar>(r, c);
+		}
+	}
+	return rgb;
 }
