@@ -1,33 +1,10 @@
-## Plank
-**Line** with active area above and below. Line snaps to the highest blob point inside active area.
+# How this * works?
+It's simple:
+- motion detection
+- track peaks (highest motion point) over the last 5 frames in a queue
+- peaks strictly ascend? - hand has been raised
+- peaks strictly descend? - hand has been lowered
 
-**Advantages**:  
-Fast computation. Plank almost always rises when hand is raised (slow moving hand might not be picked up by blob detection, since motion detection blobs would be too small and considered as a noise).
+Ok, now it works for one person. For it to work for multiple people, we would need to separate them into individual areas.
 
-**Disadvantages**:  
-Plank reacts to noise, therefore small blobs must be filtered out.
-Plank might snap to head movement, when raised arm is stationary.
-
-# TO DO
-Detect when hand is rising. (Significant blob above head level).
-
-### Current flaws of blob detection
-Small blobs inside big ones.
-Palm is frequently not selected. Especially at the end of the movement, when motion is minimal.
-
-## Blob Benchmark notes
-Pay close attention to 129, 137, 156, 180
-
-## Hand detection ideas
-Setup blob detection, so the palm is always present in a blob.
-Use higher vertical min_distance than horizontal.
-
-IDEA!! Palm tracking. When movement is clear (the whole hand in motion, big connected blob), select the top blob area, that fits into a square. Square dimensions are either fixed or dynamically determined by the hand blob size. After that use only motion inside this square and some active area around it (think plank in 2d) to track the palm location.
-
-Palm area center can snap to the weight center inside of it.
-When hand is lowered, discard the palm and start again.
-
-
-# NEW PLAN
-We don't need palm position, neither hand position. Just find out if the hand has been raised or not.
-Figure that out by analysing the motion "disturbance" direction (imagine hand motion as a wave). If the direction is upwards then the hand is raised, if its downwards -- hand is lowered.
+Face detection -> face bounding rectangles -> triple (9-tuple?) the size -> remove overlaps -> you got some person bounding areas -> use the aforementioned algorithm for each area.
