@@ -7,13 +7,14 @@
 #include "MotionDetection.h"
 #include "FaceDetection.h"
 #include "PersonArea.h"
-#include "SkinDetection.h"
 
 #define QUEUE_LEN 5
 
 using namespace cv;
 using namespace std;
 
+// Pa stands for Person area
+// Pas stands for Person areas
 void updatePaQueue(deque<PersonArea*> &raised_queue, unordered_set<PersonArea*> &have_raised, PersonArea* &pa);
 vector<PersonArea*> preparePas(vector<string> &names, vector<Rect> &faces, Size &size);
 void updatePasPositions(vector<PersonArea*> &person_areas, deque<PersonArea*> &raised_queue, unordered_set<PersonArea*> &have_raised);
@@ -23,6 +24,9 @@ void sortAreas(vector<Rect> &areas);
 Mat rgbOverlap(Mat &motion, Mat &skin);
 
 int main() {
+	// hardcoded names (left to right)
+	// yeah I know this sucks
+	// for demonstration purposes only
 	string video = "three.mp4";
 
 	vector<string> names;
@@ -38,10 +42,14 @@ int main() {
 	{
 		names = vector<string>{ "Abdullah", "Logan", "Umar", "Angel", "Rickveen" };
 	}
+	else if (video == "one.mp4")
+	{
+		names = vector<string>{ "Hamid" };
+	}
 
-	VideoCapture cam(video);
-	VideoWriter res;
-	VideoWriter res2;
+	VideoCapture cam("./videos/" + video); // read sample video from video folder
+	VideoWriter res; // video result with interface
+	VideoWriter res2; // video result with motion detection and graph for demostration and debugging
 	if (!cam.isOpened())
 		return -1;
 	namedWindow("result", WINDOW_AUTOSIZE);
@@ -51,16 +59,25 @@ int main() {
 	cvtColor(previousFrame, previousFrame, CV_BGR2GRAY);
 
 	vector<Rect> faces = detectFaces(previousFrame);
+
 	sortAreas(faces);
 	if (faces.empty()) {
 		cout << "No faces found!" << endl;
 		return -1;
 	}
+	else {
+		cout << faces.size() << endl;
+	}
+	// person area is an object with
+	// a rect area around an individual
+	// 5 highest motion points from last 5 frames
+	// methods for identifying if the hand has been raised (strictly ascending)
+	// or lowered (strictly descending)
 	vector<PersonArea*> person_areas = preparePas(names, faces, previousFrame.size());
 
 	// queue of raised hands
-	unordered_set<PersonArea*> have_raised;
-	deque<PersonArea*> raised_queue;
+	unordered_set<PersonArea*> have_raised; // set for fast checking (possibly a bad pattern)
+	deque<PersonArea*> raised_queue; // actual queue
 
 	while (true) {
 		Mat img;
@@ -78,6 +95,7 @@ int main() {
 
 		Mat queueDisplay = generateQueueDisplay(raised_queue, img.size());
 		hconcat(img, queueDisplay, img);
+
 		cvtColor(motion, motion, COLOR_GRAY2BGR);
 
 		for (auto pa : person_areas) {
@@ -91,18 +109,18 @@ int main() {
 			res << img;
 		}
 		else {
-			res = *new VideoWriter("result.avi", VideoWriter::fourcc('M', 'J', 'P', 'G'), 50, img.size());
+			res = *new VideoWriter("result.avi", VideoWriter::fourcc('M', 'J', 'P', 'G'), 25, img.size());
 		}
 
 		if (res2.isOpened()) {
 			res2 << motion;
 		}
 		else {
-			res2 = *new VideoWriter("motion_result.avi", VideoWriter::fourcc('M', 'J', 'P', 'G'), 50, motion.size());
+			res2 = *new VideoWriter("motion_result.avi", VideoWriter::fourcc('M', 'J', 'P', 'G'), 25, motion.size());
 		}
 
 		imshow("result", img);
-		imshow("motion result", motion);
+		imshow("motion", motion);
 		int keyCode = waitKey(5);
 		if (keyCode == 27)
 			break;
