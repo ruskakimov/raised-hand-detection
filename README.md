@@ -1,4 +1,4 @@
-# How this * works?
+# How does it work?
 It's simple:
 - motion detection
 - track peaks (highest motion point) over the last 5 frames in a queue
